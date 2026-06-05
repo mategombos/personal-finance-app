@@ -9,10 +9,12 @@ import { SpendingByCategoryChart } from '@/components/dashboard/SpendingByCatego
 import { MonthlyBreakdownChart } from '@/components/dashboard/MonthlyBreakdownChart';
 import { RecentTransactionsList } from '@/components/dashboard/RecentTransactionsList';
 import { NetWorthCard } from '@/components/dashboard/NetWorthCard';
+import { useTranslations } from '@/hooks/useTranslations';
 
 export default function DashboardPage() {
   const [period, setPeriod] = useState<DashboardPeriod>('month');
   const { settings } = useSettings();
+  const t = useTranslations();
   const { categories } = useCategories();
   const {
     totalIncome,
@@ -26,7 +28,7 @@ export default function DashboardPage() {
 
   return (
     <div className="px-4 py-6 md:px-8 space-y-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('dashboard.title')}</h1>
 
       <SummaryCards
         totalIncome={totalIncome}

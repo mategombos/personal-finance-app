@@ -10,7 +10,7 @@ export function useFinanceStore(): [FinanceStore, (updater: (prev: FinanceStore)
     if (typeof window === 'undefined') {
       return {
         version: 1,
-        settings: { currency: 'HUF', dateFormat: 'DD/MM/YYYY', theme: 'system' },
+        settings: { currency: 'HUF', dateFormat: 'DD/MM/YYYY', theme: 'system', language: 'en' },
         transactions: [],
         categories: [],
         assets: [],

@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import { MonthlyData } from '@/types';
 import { formatCurrency, formatCompact } from '@/lib/formatters';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface MonthlyBreakdownChartProps {
   data: MonthlyData[];
@@ -19,10 +20,12 @@ interface MonthlyBreakdownChartProps {
 }
 
 export function MonthlyBreakdownChart({ data, currency }: MonthlyBreakdownChartProps) {
+  const t = useTranslations();
+
   return (
     <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-900">
       <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-gray-100">
-        Monthly Breakdown (Last 6 Months)
+        {t('dashboard.monthlyBreakdown')}
       </h3>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
@@ -35,13 +38,13 @@ export function MonthlyBreakdownChart({ data, currency }: MonthlyBreakdownChartP
           <Tooltip
             formatter={(value, name) => [
               formatCurrency(Number(value), currency),
-              name === 'income' ? 'Income' : 'Expenses',
+              name === 'income' ? t('common.income') : t('common.expense'),
             ]}
           />
           <Legend
             formatter={(value) => (
               <span className="text-xs text-gray-700 dark:text-gray-300">
-                {value === 'income' ? 'Income' : 'Expenses'}
+                {value === 'income' ? t('common.income') : t('common.expense')}
               </span>
             )}
           />

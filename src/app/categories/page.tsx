@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useCategories } from '@/hooks/useCategories';
+import { useTranslations } from '@/hooks/useTranslations';
+import { interpolate } from '@/lib/translations';
 import { Category } from '@/types';
 import { CategoryCard } from '@/components/categories/CategoryCard';
 import { CategoryForm } from '@/components/categories/CategoryForm';
@@ -17,6 +19,7 @@ type Tab = 'expense' | 'income' | 'both';
 
 export default function CategoriesPage() {
   const { categories, addCategory, updateCategory, deleteCategory } = useCategories();
+  const t = useTranslations();
   const [tab, setTab] = useState<Tab>('expense');
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
@@ -41,28 +44,34 @@ export default function CategoriesPage() {
     setDeleting(null);
   };
 
+  const TAB_LABELS: Record<Tab, string> = {
+    expense: t('common.expense'),
+    income: t('common.income'),
+    both: t('common.both'),
+  };
+
   return (
     <div className="px-4 py-6 md:px-8 max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Categories</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('categories.title')}</h1>
         <Button onClick={() => setAddOpen(true)}>
-          <Plus className="h-4 w-4" /> Add Category
+          <Plus className="h-4 w-4" /> {t('categories.addCategory')}
         </Button>
       </div>
 
       <div className="flex gap-1 rounded-lg border border-gray-200 dark:border-gray-700 p-1 w-fit bg-white dark:bg-gray-900">
-        {(['expense', 'income', 'both'] as Tab[]).map((t) => (
+        {(['expense', 'income', 'both'] as Tab[]).map((tabValue) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabValue}
+            onClick={() => setTab(tabValue)}
             className={clsx(
-              'rounded-md px-4 py-1.5 text-sm font-medium capitalize transition-colors',
-              tab === t
+              'rounded-md px-4 py-1.5 text-sm font-medium transition-colors',
+              tab === tabValue
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
             )}
           >
-            {t}
+            {TAB_LABELS[tabValue]}
           </button>
         ))}
       </div>
@@ -70,9 +79,9 @@ export default function CategoriesPage() {
       {visible.length === 0 ? (
         <EmptyState
           icon={Tag}
-          title="No categories"
-          description="Add a category to organize your transactions."
-          action={<Button onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> Add Category</Button>}
+          title={t('categories.noCategories')}
+          description={t('categories.noCategoriesDesc')}
+          action={<Button onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> {t('categories.addCategory')}</Button>}
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -82,11 +91,11 @@ export default function CategoriesPage() {
         </div>
       )}
 
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add Category">
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t('categories.addCategory')}>
         <CategoryForm onSubmit={handleAdd} onCancel={() => setAddOpen(false)} />
       </Modal>
 
-      <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit Category">
+      <Modal open={!!editing} onClose={() => setEditing(null)} title={t('categories.editCategory')}>
         {editing && (
           <CategoryForm initial={editing} onSubmit={handleEdit} onCancel={() => setEditing(null)} />
         )}
@@ -96,9 +105,9 @@ export default function CategoriesPage() {
         open={!!deleting}
         onClose={() => setDeleting(null)}
         onConfirm={handleDelete}
-        title="Delete Category"
-        description={`Delete "${deleting?.name}"? This will not remove existing transactions.`}
-        confirmLabel="Delete"
+        title={t('categories.deleteTitle')}
+        description={interpolate(t('categories.deleteConfirm'), { name: deleting?.name ?? '' })}
+        confirmLabel={t('common.delete')}
         dangerous
       />
     </div>

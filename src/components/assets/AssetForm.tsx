@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Asset } from '@/types';
-import { assetSchema, AssetFormData } from '@/lib/validators';
+import { makeAssetSchema, AssetFormData } from '@/lib/validators';
+import { useTranslations } from '@/hooks/useTranslations';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
@@ -17,6 +18,7 @@ interface AssetFormProps {
 }
 
 export function AssetForm({ initial, onSubmit, onCancel }: AssetFormProps) {
+  const t = useTranslations();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<AssetFormData>({
     name: initial?.name ?? '',
@@ -33,7 +35,13 @@ export function AssetForm({ initial, onSubmit, onCancel }: AssetFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = assetSchema.safeParse(form);
+    const schema = makeAssetSchema({
+      nameRequired: t('validation.nameRequired'),
+      currencyRequired: t('validation.currencyRequired'),
+      colorInvalid: t('validation.colorInvalid'),
+      iconRequired: t('validation.iconRequired'),
+    });
+    const parsed = schema.safeParse(form);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
       parsed.error.issues.forEach((issue) => {
@@ -49,28 +57,30 @@ export function AssetForm({ initial, onSubmit, onCancel }: AssetFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input
-        label="Name"
+        label={t('assets.form.name')}
         id="name"
         value={form.name}
         onChange={(e) => set('name', e.target.value)}
         error={errors.name}
-        placeholder="e.g. OTP Bank Account"
+        placeholder={t('assets.form.namePlaceholder')}
       />
 
       <Select
-        label="Asset Type"
+        label={t('assets.form.type')}
         id="type"
         value={form.type}
         onChange={(e) => set('type', e.target.value as AssetFormData['type'])}
       >
-        {ASSET_TYPES.map((t) => (
-          <option key={t.value} value={t.value}>{t.label}</option>
+        {ASSET_TYPES.map((assetType) => (
+          <option key={assetType.value} value={assetType.value}>
+            {t(`assets.types.${assetType.value}` as Parameters<typeof t>[0])}
+          </option>
         ))}
       </Select>
 
       <div className="grid grid-cols-2 gap-3">
         <Input
-          label="Current Balance / Value"
+          label={t('assets.form.balance')}
           id="balance"
           type="number"
           step="any"
@@ -79,7 +89,7 @@ export function AssetForm({ initial, onSubmit, onCancel }: AssetFormProps) {
           error={errors.balance}
         />
         <Select
-          label="Currency"
+          label={t('assets.form.currency')}
           id="currency"
           value={form.currency}
           onChange={(e) => set('currency', e.target.value)}
@@ -91,19 +101,19 @@ export function AssetForm({ initial, onSubmit, onCancel }: AssetFormProps) {
       </div>
 
       <Input
-        label="Description (optional)"
+        label={t('assets.form.description')}
         id="description"
         value={form.description}
         onChange={(e) => set('description', e.target.value)}
-        placeholder="e.g. 2021 Honda CBR"
+        placeholder={t('assets.form.descriptionPlaceholder')}
       />
 
-      <ColorPicker label="Color" value={form.color} onChange={(c) => set('color', c)} />
-      <IconPicker label="Icon" value={form.icon} onChange={(i) => set('icon', i)} />
+      <ColorPicker label={t('assets.form.color')} value={form.color} onChange={(c) => set('color', c)} />
+      <IconPicker label={t('assets.form.icon')} value={form.icon} onChange={(i) => set('icon', i)} />
 
       <div className="flex justify-end gap-3 pt-2">
-        <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
-        <Button type="submit">{initial ? 'Save Changes' : 'Add Asset'}</Button>
+        <Button type="button" variant="secondary" onClick={onCancel}>{t('common.cancel')}</Button>
+        <Button type="submit">{initial ? t('common.saveChanges') : t('assets.addAsset')}</Button>
       </div>
     </form>
   );

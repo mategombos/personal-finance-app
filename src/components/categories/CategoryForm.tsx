@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Category } from '@/types';
-import { categorySchema, CategoryFormData } from '@/lib/validators';
+import { makeCategorySchema, CategoryFormData } from '@/lib/validators';
+import { useTranslations } from '@/hooks/useTranslations';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
@@ -17,6 +18,7 @@ interface CategoryFormProps {
 }
 
 export function CategoryForm({ initial, onSubmit, onCancel }: CategoryFormProps) {
+  const t = useTranslations();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<CategoryFormData>({
     name: initial?.name ?? '',
@@ -30,7 +32,12 @@ export function CategoryForm({ initial, onSubmit, onCancel }: CategoryFormProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = categorySchema.safeParse(form);
+    const schema = makeCategorySchema({
+      nameRequired: t('validation.nameRequired'),
+      colorInvalid: t('validation.colorInvalid'),
+      iconRequired: t('validation.iconRequired'),
+    });
+    const parsed = schema.safeParse(form);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
       parsed.error.issues.forEach((issue) => {
@@ -46,31 +53,31 @@ export function CategoryForm({ initial, onSubmit, onCancel }: CategoryFormProps)
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input
-        label="Name"
+        label={t('categories.form.name')}
         id="name"
         value={form.name}
         onChange={(e) => set('name', e.target.value)}
         error={errors.name}
-        placeholder="e.g. Groceries"
+        placeholder={t('categories.form.namePlaceholder')}
       />
 
       <Select
-        label="Type"
+        label={t('categories.form.type')}
         id="type"
         value={form.type}
         onChange={(e) => set('type', e.target.value as CategoryFormData['type'])}
       >
-        <option value="expense">Expense</option>
-        <option value="income">Income</option>
-        <option value="both">Both</option>
+        <option value="expense">{t('common.expense')}</option>
+        <option value="income">{t('common.income')}</option>
+        <option value="both">{t('common.both')}</option>
       </Select>
 
-      <ColorPicker label="Color" value={form.color} onChange={(c) => set('color', c)} />
-      <IconPicker label="Icon" value={form.icon} onChange={(i) => set('icon', i)} />
+      <ColorPicker label={t('categories.form.color')} value={form.color} onChange={(c) => set('color', c)} />
+      <IconPicker label={t('categories.form.icon')} value={form.icon} onChange={(i) => set('icon', i)} />
 
       <div className="flex justify-end gap-3 pt-2">
-        <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
-        <Button type="submit">{initial ? 'Save Changes' : 'Add Category'}</Button>
+        <Button type="button" variant="secondary" onClick={onCancel}>{t('common.cancel')}</Button>
+        <Button type="submit">{initial ? t('common.saveChanges') : t('categories.addCategory')}</Button>
       </div>
     </form>
   );

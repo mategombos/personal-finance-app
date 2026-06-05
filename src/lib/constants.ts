@@ -1,13 +1,13 @@
 import { AssetType } from '@/types';
 
 export const STORAGE_KEY = 'finance_app_v1';
-export const CURRENT_VERSION = 1;
+export const CURRENT_VERSION = 2;
 
-export const ASSET_TYPES: { value: AssetType; label: string; icon: string }[] = [
-  { value: 'cash', label: 'Cash', icon: 'banknotes' },
-  { value: 'bank', label: 'Bank Account', icon: 'landmark' },
-  { value: 'investment', label: 'Investment', icon: 'trending-up' },
-  { value: 'personal', label: 'Personal Asset', icon: 'car' },
+export const ASSET_TYPES: { value: AssetType; icon: string }[] = [
+  { value: 'cash', icon: 'banknotes' },
+  { value: 'bank', icon: 'landmark' },
+  { value: 'investment', icon: 'trending-up' },
+  { value: 'personal', icon: 'car' },
 ];
 
 export const CURRENCIES = [

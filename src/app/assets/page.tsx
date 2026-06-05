@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { useAssets } from '@/hooks/useAssets';
 import { useSettings } from '@/hooks/useSettings';
-import { Asset, AssetType } from '@/types';
+import { useTranslations } from '@/hooks/useTranslations';
+import { interpolate } from '@/lib/translations';
+import { Asset } from '@/types';
 import { AssetCard } from '@/components/assets/AssetCard';
 import { AssetForm } from '@/components/assets/AssetForm';
 import { Modal } from '@/components/ui/Modal';
@@ -19,6 +21,7 @@ import { AssetFormData } from '@/lib/validators';
 export default function AssetsPage() {
   const { assets, addAsset, updateAsset, deleteAsset } = useAssets();
   const { settings } = useSettings();
+  const t = useTranslations();
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<Asset | null>(null);
   const [deleting, setDeleting] = useState<Asset | null>(null);
@@ -42,29 +45,30 @@ export default function AssetsPage() {
     <div className="px-4 py-6 md:px-8 max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Assets</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('assets.title')}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Net Worth: <span className="font-semibold text-blue-600">{formatCurrency(netWorth, settings.currency)}</span>
+            {t('assets.netWorth')}: <span className="font-semibold text-blue-600">{formatCurrency(netWorth, settings.currency)}</span>
           </p>
         </div>
         <Button onClick={() => setAddOpen(true)}>
-          <Plus className="h-4 w-4" /> Add Asset
+          <Plus className="h-4 w-4" /> {t('assets.addAsset')}
         </Button>
       </div>
 
       {active.length === 0 ? (
         <EmptyState
           icon={Wallet}
-          title="No assets yet"
-          description="Track your cash, bank accounts, investments, and personal assets."
-          action={<Button onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> Add Asset</Button>}
+          title={t('assets.noAssets')}
+          description={t('assets.noAssetsDesc')}
+          action={<Button onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> {t('assets.addAsset')}</Button>}
         />
       ) : (
         <div className="space-y-6">
-          {ASSET_TYPES.map(({ value, label }) => {
+          {ASSET_TYPES.map(({ value }) => {
             const group = active.filter((a) => a.type === value);
             if (group.length === 0) return null;
             const groupTotal = group.reduce((s, a) => s + a.balance, 0);
+            const label = t(`assets.types.${value}` as Parameters<typeof t>[0]);
             return (
               <div key={value}>
                 <div className="flex items-center justify-between mb-3">
@@ -86,11 +90,11 @@ export default function AssetsPage() {
         </div>
       )}
 
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add Asset">
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t('assets.addAsset')}>
         <AssetForm onSubmit={handleAdd} onCancel={() => setAddOpen(false)} />
       </Modal>
 
-      <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit Asset">
+      <Modal open={!!editing} onClose={() => setEditing(null)} title={t('assets.editAsset')}>
         {editing && (
           <AssetForm initial={editing} onSubmit={handleEdit} onCancel={() => setEditing(null)} />
         )}
@@ -100,9 +104,9 @@ export default function AssetsPage() {
         open={!!deleting}
         onClose={() => setDeleting(null)}
         onConfirm={handleDelete}
-        title="Delete Asset"
-        description={`Delete "${deleting?.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t('assets.deleteTitle')}
+        description={interpolate(t('assets.deleteConfirm'), { name: deleting?.name ?? '' })}
+        confirmLabel={t('common.delete')}
         dangerous
       />
     </div>

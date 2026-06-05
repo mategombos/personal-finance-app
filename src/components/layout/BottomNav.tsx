@@ -4,16 +4,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, ArrowLeftRight, Wallet, Settings } from 'lucide-react';
 import { clsx } from 'clsx';
-
-const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
-  { href: '/assets', label: 'Assets', icon: Wallet },
-  { href: '/settings', label: 'Settings', icon: Settings },
-];
+import { useTranslations } from '@/hooks/useTranslations';
 
 export function BottomNav() {
   const pathname = usePathname();
+  const t = useTranslations();
+
+  const NAV_ITEMS = [
+    { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
+    { href: '/transactions', label: t('nav.transactions'), icon: ArrowLeftRight },
+    { href: '/assets', label: t('nav.assets'), icon: Wallet },
+    { href: '/settings', label: t('nav.settings'), icon: Settings },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">

@@ -6,6 +6,7 @@ import { formatCurrency } from '@/lib/formatters';
 import { ArrowRight } from 'lucide-react';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { ASSET_TYPES } from '@/lib/constants';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface NetWorthCardProps {
   assets: Asset[];
@@ -13,12 +14,13 @@ interface NetWorthCardProps {
 }
 
 export function NetWorthCard({ assets, currency }: NetWorthCardProps) {
+  const t = useTranslations();
   const active = assets.filter((a) => !a.isArchived);
   const netWorth = active.reduce((sum, a) => sum + a.balance, 0);
 
-  const byType = ASSET_TYPES.map(({ value, label }) => ({
+  const byType = ASSET_TYPES.map(({ value }) => ({
     type: value as AssetType,
-    label,
+    label: t(`assets.types.${value}` as Parameters<typeof t>[0]),
     total: active.filter((a) => a.type === value).reduce((s, a) => s + a.balance, 0),
   })).filter((g) => g.total !== 0);
 
@@ -26,19 +28,19 @@ export function NetWorthCard({ assets, currency }: NetWorthCardProps) {
     <div className="rounded-xl bg-white shadow-sm dark:bg-gray-900">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
         <div>
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Net Worth</h3>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('dashboard.netWorth')}</h3>
           <p className="text-2xl font-bold text-blue-600 mt-1">{formatCurrency(netWorth, currency)}</p>
         </div>
         <Link
           href="/assets"
           className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
         >
-          Manage <ArrowRight className="h-3.5 w-3.5" />
+          {t('dashboard.manage')} <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
       {byType.length === 0 ? (
         <div className="flex h-24 items-center justify-center text-sm text-gray-400">
-          No assets yet
+          {t('dashboard.noAssetsYet')}
         </div>
       ) : (
         <ul className="divide-y divide-gray-100 dark:divide-gray-800">

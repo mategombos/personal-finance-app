@@ -42,6 +42,7 @@ export interface AppSettings {
   currency: string;
   dateFormat: string;
   theme: 'light' | 'dark' | 'system';
+  language: 'en' | 'hu';
   defaultAssetId?: string;
 }
 

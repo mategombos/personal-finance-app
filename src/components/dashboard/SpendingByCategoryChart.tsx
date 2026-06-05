@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recha
 import { CategoryTotal } from '@/types';
 import { formatCurrency, formatPercent } from '@/lib/formatters';
 import { PieChart as PieIcon } from 'lucide-react';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface SpendingByCategoryChartProps {
   data: CategoryTotal[];
@@ -11,13 +12,15 @@ interface SpendingByCategoryChartProps {
 }
 
 export function SpendingByCategoryChart({ data, currency }: SpendingByCategoryChartProps) {
+  const t = useTranslations();
+
   if (data.length === 0) {
     return (
       <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-900">
-        <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-gray-100">Spending by Category</h3>
+        <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-gray-100">{t('dashboard.spendingByCategory')}</h3>
         <div className="flex h-48 flex-col items-center justify-center gap-2 text-gray-400">
           <PieIcon className="h-10 w-10" />
-          <p className="text-sm">No expense data yet</p>
+          <p className="text-sm">{t('dashboard.noExpenseData')}</p>
         </div>
       </div>
     );
@@ -25,7 +28,7 @@ export function SpendingByCategoryChart({ data, currency }: SpendingByCategoryCh
 
   return (
     <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-900">
-      <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-gray-100">Spending by Category</h3>
+      <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-gray-100">{t('dashboard.spendingByCategory')}</h3>
       <ResponsiveContainer width="100%" height={220}>
         <PieChart>
           <Pie

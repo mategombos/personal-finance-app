@@ -5,6 +5,7 @@ import { Transaction, Category } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { ArrowRight } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface RecentTransactionsListProps {
   transactions: Transaction[];
@@ -19,20 +20,22 @@ export function RecentTransactionsList({
   currency,
   dateFormat,
 }: RecentTransactionsListProps) {
+  const t = useTranslations();
+
   return (
     <div className="rounded-xl bg-white shadow-sm dark:bg-gray-900">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Recent Transactions</h3>
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('dashboard.recentTransactions')}</h3>
         <Link
           href="/transactions"
           className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
         >
-          View all <ArrowRight className="h-3.5 w-3.5" />
+          {t('dashboard.viewAll')} <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
       {transactions.length === 0 ? (
         <div className="flex h-32 items-center justify-center text-sm text-gray-400">
-          No transactions yet
+          {t('dashboard.noTransactionsYet')}
         </div>
       ) : (
         <ul className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -50,7 +53,7 @@ export function RecentTransactionsList({
                       {tx.description}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {cat?.name ?? 'Unknown'} · {formatDate(tx.date, dateFormat)}
+                      {cat?.name ?? t('common.unknown')} · {formatDate(tx.date, dateFormat)}
                     </p>
                   </div>
                 </div>

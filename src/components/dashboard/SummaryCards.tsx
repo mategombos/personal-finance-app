@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { DashboardPeriod } from '@/hooks/useDashboard';
 import { clsx } from 'clsx';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface SummaryCardsProps {
   totalIncome: number;
@@ -14,12 +15,6 @@ interface SummaryCardsProps {
   onPeriodChange: (p: DashboardPeriod) => void;
 }
 
-const PERIODS: { value: DashboardPeriod; label: string }[] = [
-  { value: 'month', label: 'This Month' },
-  { value: 'year', label: 'This Year' },
-  { value: 'all', label: 'All Time' },
-];
-
 export function SummaryCards({
   totalIncome,
   totalExpenses,
@@ -28,6 +23,14 @@ export function SummaryCards({
   period,
   onPeriodChange,
 }: SummaryCardsProps) {
+  const t = useTranslations();
+
+  const PERIODS: { value: DashboardPeriod; label: string }[] = [
+    { value: 'month', label: t('dashboard.thisMonth') },
+    { value: 'year', label: t('dashboard.thisYear') },
+    { value: 'all', label: t('dashboard.allTime') },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -50,21 +53,21 @@ export function SummaryCards({
         <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-gray-900">
           <div className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
             <TrendingUp className="h-4 w-4 text-green-500" />
-            Total Income
+            {t('dashboard.totalIncome')}
           </div>
           <p className="text-2xl font-bold text-green-600">{formatCurrency(totalIncome, currency)}</p>
         </div>
         <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-gray-900">
           <div className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
             <TrendingDown className="h-4 w-4 text-red-500" />
-            Total Expenses
+            {t('dashboard.totalExpenses')}
           </div>
           <p className="text-2xl font-bold text-red-600">{formatCurrency(totalExpenses, currency)}</p>
         </div>
         <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-gray-900">
           <div className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
             <Wallet className="h-4 w-4 text-blue-500" />
-            Net Balance
+            {t('dashboard.netBalance')}
           </div>
           <p className={clsx('text-2xl font-bold', netBalance >= 0 ? 'text-blue-600' : 'text-red-600')}>
             {formatCurrency(netBalance, currency)}

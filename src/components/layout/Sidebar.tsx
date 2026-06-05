@@ -11,17 +11,19 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { clsx } from 'clsx';
-
-const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
-  { href: '/categories', label: 'Categories', icon: Tag },
-  { href: '/assets', label: 'Assets', icon: Wallet },
-  { href: '/settings', label: 'Settings', icon: Settings },
-];
+import { useTranslations } from '@/hooks/useTranslations';
 
 export function Sidebar() {
   const pathname = usePathname();
+  const t = useTranslations();
+
+  const NAV_ITEMS = [
+    { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
+    { href: '/transactions', label: t('nav.transactions'), icon: ArrowLeftRight },
+    { href: '/categories', label: t('nav.categories'), icon: Tag },
+    { href: '/assets', label: t('nav.assets'), icon: Wallet },
+    { href: '/settings', label: t('nav.settings'), icon: Settings },
+  ];
 
   return (
     <aside className="hidden md:flex md:flex-col md:w-60 md:min-h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">

@@ -6,6 +6,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   currency: 'HUF',
   dateFormat: 'DD/MM/YYYY',
   theme: 'system',
+  language: 'en',
 };
 
 const now = () => new Date().toISOString();
@@ -22,8 +23,18 @@ function buildDefaultStore(): FinanceStore {
 }
 
 function migrateStore(store: FinanceStore): FinanceStore {
-  // Placeholder for future migrations
-  return { ...store, version: CURRENT_VERSION };
+  let s = store;
+  if (s.version < 2) {
+    s = {
+      ...s,
+      version: 2,
+      settings: {
+        ...s.settings,
+        language: (s.settings as AppSettings & { language?: 'en' | 'hu' }).language ?? 'en',
+      },
+    };
+  }
+  return { ...s, version: CURRENT_VERSION };
 }
 
 export function readStore(): FinanceStore {
