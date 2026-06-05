@@ -1,0 +1,77 @@
+'use client';
+
+import { Category } from '@/types';
+import { Select } from '@/components/ui/Select';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { X } from 'lucide-react';
+
+export interface TransactionFiltersState {
+  type: '' | 'income' | 'expense';
+  categoryId: string;
+  dateFrom: string;
+  dateTo: string;
+}
+
+interface TransactionFiltersProps {
+  filters: TransactionFiltersState;
+  categories: Category[];
+  onChange: (f: TransactionFiltersState) => void;
+  onReset: () => void;
+}
+
+export function TransactionFilters({ filters, categories, onChange, onReset }: TransactionFiltersProps) {
+  const set = (key: keyof TransactionFiltersState, value: string) =>
+    onChange({ ...filters, [key]: value });
+
+  const hasActive = filters.type || filters.categoryId || filters.dateFrom || filters.dateTo;
+
+  return (
+    <div className="flex flex-wrap gap-3 items-end">
+      <Select
+        label="Type"
+        value={filters.type}
+        onChange={(e) => set('type', e.target.value)}
+        className="w-36"
+      >
+        <option value="">All Types</option>
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </Select>
+
+      <Select
+        label="Category"
+        value={filters.categoryId}
+        onChange={(e) => set('categoryId', e.target.value)}
+        className="w-44"
+      >
+        <option value="">All Categories</option>
+        {categories.map((c) => (
+          <option key={c.id} value={c.id}>{c.name}</option>
+        ))}
+      </Select>
+
+      <Input
+        label="From"
+        type="date"
+        value={filters.dateFrom}
+        onChange={(e) => set('dateFrom', e.target.value)}
+        className="w-40"
+      />
+
+      <Input
+        label="To"
+        type="date"
+        value={filters.dateTo}
+        onChange={(e) => set('dateTo', e.target.value)}
+        className="w-40"
+      />
+
+      {hasActive && (
+        <Button variant="ghost" size="sm" onClick={onReset} className="self-end mb-0.5">
+          <X className="h-4 w-4" /> Clear
+        </Button>
+      )}
+    </div>
+  );
+}
