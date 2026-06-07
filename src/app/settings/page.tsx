@@ -1,17 +1,19 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useSettings } from '@/hooks/useSettings';
 import { useFinanceStore } from '@/hooks/useFinanceStore';
+import { useAssets } from '@/hooks/useAssets';
 import { useTranslations } from '@/hooks/useTranslations';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { CURRENCIES, DATE_FORMATS } from '@/lib/constants';
-import { clearStore, readStore } from '@/lib/storage';
+import { clearStore } from '@/lib/storage';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { useState } from 'react';
-import { FinanceStore } from '@/types';
 import { writeStore } from '@/lib/storage';
+import { isFirebaseConfigured } from '@/lib/firebase';
+import { financeStoreImportSchema } from '@/lib/validators';
+import { FinanceStore } from '@/types';
 
 const LANGUAGES = [
   { value: 'en', label: 'English' },
@@ -20,10 +22,14 @@ const LANGUAGES = [
 
 export default function SettingsPage() {
   const { settings, updateSettings } = useSettings();
-  const [store, setStoreRaw] = useFinanceStore();
+  const [store] = useFinanceStore();
+  const { assets } = useAssets();
   const [resetOpen, setResetOpen] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
   const importRef = useRef<HTMLInputElement>(null);
   const t = useTranslations();
+
+  const activeAssets = assets.filter((a) => !a.isArchived);
 
   const handleExport = () => {
     const blob = new Blob([JSON.stringify(store, null, 2)], { type: 'application/json' });
@@ -38,18 +44,21 @@ export default function SettingsPage() {
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setImportError(null);
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        const parsed = JSON.parse(reader.result as string) as FinanceStore;
-        if (!parsed.transactions || !parsed.categories || !parsed.assets) {
-          alert('Invalid backup file.');
+        const raw = JSON.parse(reader.result as string);
+        const result = financeStoreImportSchema.safeParse(raw);
+        if (!result.success) {
+          const msg = result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
+          setImportError(`Invalid backup file — ${msg}`);
           return;
         }
-        writeStore(parsed);
+        writeStore(result.data as FinanceStore);
         window.location.reload();
       } catch {
-        alert('Failed to parse backup file.');
+        setImportError('Failed to parse backup file. Make sure it is a valid JSON file.');
       }
     };
     reader.readAsText(file);
@@ -65,6 +74,7 @@ export default function SettingsPage() {
     <div className="px-4 py-6 md:px-8 max-w-2xl mx-auto space-y-8">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('settings.title')}</h1>
 
+      {/* Preferences */}
       <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-900 space-y-4">
         <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('settings.preferences')}</h2>
         <Select
@@ -96,8 +106,33 @@ export default function SettingsPage() {
             <option key={l.value} value={l.value}>{l.label}</option>
           ))}
         </Select>
+
+        {activeAssets.length > 0 && (
+          <Select
+            label="Default Account"
+            value={settings.defaultAssetId ?? ''}
+            onChange={(e) => updateSettings({ defaultAssetId: e.target.value || undefined })}
+          >
+            <option value="">No default</option>
+            {activeAssets.map((a) => (
+              <option key={a.id} value={a.id}>{a.name}</option>
+            ))}
+          </Select>
+        )}
       </section>
 
+      {/* Cloud Sync */}
+      {isFirebaseConfigured() && (
+        <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-900 space-y-3">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Cloud Sync</h2>
+          <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-green-500 inline-block" />
+            Firebase connected — your data syncs automatically across devices.
+          </p>
+        </section>
+      )}
+
+      {/* Data Management */}
       <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-900 space-y-4">
         <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('settings.dataManagement')}</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -110,8 +145,12 @@ export default function SettingsPage() {
           </Button>
           <input ref={importRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
         </div>
+        {importError && (
+          <p className="text-sm text-red-600 dark:text-red-400">{importError}</p>
+        )}
       </section>
 
+      {/* Danger Zone */}
       <section className="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950 space-y-3">
         <h2 className="text-base font-semibold text-red-700 dark:text-red-400">{t('settings.dangerZone')}</h2>
         <p className="text-sm text-red-600 dark:text-red-400">
