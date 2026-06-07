@@ -21,6 +21,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['firebase'],
   async headers() {
     return [
       {
