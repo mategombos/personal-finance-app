@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ArrowLeftRight, Wallet, Settings } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, Tag, Wallet, Settings, Upload } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useTranslations } from '@/hooks/useTranslations';
 
@@ -13,7 +13,8 @@ export function BottomNav() {
   const NAV_ITEMS = [
     { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { href: '/transactions', label: t('nav.transactions'), icon: ArrowLeftRight },
-    { href: '/assets', label: t('nav.assets'), icon: Wallet },
+    { href: '/import', label: 'Import', icon: Upload },
+    { href: '/categories', label: t('nav.categories'), icon: Tag },
     { href: '/settings', label: t('nav.settings'), icon: Settings },
   ];
 

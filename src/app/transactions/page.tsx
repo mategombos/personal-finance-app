@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useCategories } from '@/hooks/useCategories';
+import { useAssets } from '@/hooks/useAssets';
 import { useSettings } from '@/hooks/useSettings';
 import { useTranslations } from '@/hooks/useTranslations';
 import { interpolate } from '@/lib/translations';
@@ -14,16 +15,18 @@ import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Plus, ArrowLeftRight } from 'lucide-react';
+import { Plus, ArrowLeftRight, Upload } from 'lucide-react';
 import { parseISO, isWithinInterval } from 'date-fns';
 import { TransactionFormData } from '@/lib/validators';
+import Link from 'next/link';
 
-const EMPTY_FILTERS: TransactionFiltersState = { type: '', categoryId: '', dateFrom: '', dateTo: '' };
+const EMPTY_FILTERS: TransactionFiltersState = { type: '', categoryId: '', assetId: '', dateFrom: '', dateTo: '' };
 const PAGE_SIZE = 25;
 
 export default function TransactionsPage() {
   const { transactions, addTransaction, updateTransaction, deleteTransaction } = useTransactions();
   const { categories } = useCategories();
+  const { assets } = useAssets();
   const { settings } = useSettings();
   const t = useTranslations();
 
@@ -37,6 +40,7 @@ export default function TransactionsPage() {
     return transactions.filter((tx) => {
       if (filters.type && tx.type !== filters.type) return false;
       if (filters.categoryId && tx.categoryId !== filters.categoryId) return false;
+      if (filters.assetId && tx.assetId !== filters.assetId) return false;
       if (filters.dateFrom || filters.dateTo) {
         const date = parseISO(tx.date);
         const start = filters.dateFrom ? parseISO(filters.dateFrom) : new Date(0);
@@ -71,16 +75,25 @@ export default function TransactionsPage() {
 
   return (
     <div className="px-4 py-6 md:px-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('transactions.title')}</h1>
-        <Button onClick={() => setAddOpen(true)}>
-          <Plus className="h-4 w-4" /> {t('transactions.add')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/import"
+            className="inline-flex items-center gap-2 rounded-lg font-medium transition-colors px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100"
+          >
+            <Upload className="h-4 w-4" /> Import
+          </Link>
+          <Button onClick={() => setAddOpen(true)}>
+            <Plus className="h-4 w-4" /> {t('transactions.add')}
+          </Button>
+        </div>
       </div>
 
       <TransactionFilters
         filters={filters}
         categories={categories}
+        assets={assets}
         onChange={(f) => { setFilters(f); setPage(1); }}
         onReset={resetFilters}
       />
@@ -101,6 +114,7 @@ export default function TransactionsPage() {
                   key={tx.id}
                   transaction={tx}
                   category={categories.find((c) => c.id === tx.categoryId)}
+                  asset={assets.find((a) => a.id === tx.assetId)}
                   currency={settings.currency}
                   dateFormat={settings.dateFormat}
                   onEdit={setEditing}

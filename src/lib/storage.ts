@@ -19,6 +19,7 @@ function buildDefaultStore(): FinanceStore {
     categories: DEFAULT_CATEGORIES.map((c) => ({ ...c, createdAt: ts })),
     assets: DEFAULT_ASSETS.map((a) => ({ ...a, createdAt: ts, updatedAt: ts })),
     transactions: [],
+    netWorthHistory: [],
   };
 }
 
@@ -32,6 +33,17 @@ function migrateStore(store: FinanceStore): FinanceStore {
         ...s.settings,
         language: (s.settings as AppSettings & { language?: 'en' | 'hu' }).language ?? 'en',
       },
+    };
+  }
+  if (s.version < 3) {
+    s = {
+      ...s,
+      version: 3,
+      netWorthHistory: [],
+      transactions: s.transactions.map((t) => ({
+        ...t,
+        isRecurring: t.isRecurring ?? false,
+      })),
     };
   }
   return { ...s, version: CURRENT_VERSION };

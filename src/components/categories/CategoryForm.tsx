@@ -25,7 +25,9 @@ export function CategoryForm({ initial, onSubmit, onCancel }: CategoryFormProps)
     type: initial?.type ?? 'expense',
     color: initial?.color ?? COLOR_PALETTE[0],
     icon: initial?.icon ?? 'circle-ellipsis',
+    monthlyBudget: initial?.monthlyBudget,
   });
+  const [budgetStr, setBudgetStr] = useState(initial?.monthlyBudget?.toString() ?? '');
 
   const set = <K extends keyof CategoryFormData>(key: K, value: CategoryFormData[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -37,7 +39,11 @@ export function CategoryForm({ initial, onSubmit, onCancel }: CategoryFormProps)
       colorInvalid: t('validation.colorInvalid'),
       iconRequired: t('validation.iconRequired'),
     });
-    const parsed = schema.safeParse(form);
+    const data: CategoryFormData = {
+      ...form,
+      monthlyBudget: budgetStr ? parseFloat(budgetStr) : undefined,
+    };
+    const parsed = schema.safeParse(data);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
       parsed.error.issues.forEach((issue) => {
@@ -71,6 +77,18 @@ export function CategoryForm({ initial, onSubmit, onCancel }: CategoryFormProps)
         <option value="income">{t('common.income')}</option>
         <option value="both">{t('common.both')}</option>
       </Select>
+
+      <Input
+        label="Monthly Budget (optional)"
+        id="monthlyBudget"
+        type="number"
+        min="0"
+        step="any"
+        placeholder="Leave empty for no limit"
+        value={budgetStr}
+        onChange={(e) => setBudgetStr(e.target.value)}
+        error={errors.monthlyBudget}
+      />
 
       <ColorPicker label={t('categories.form.color')} value={form.color} onChange={(c) => set('color', c)} />
       <IconPicker label={t('categories.form.icon')} value={form.icon} onChange={(i) => set('icon', i)} />

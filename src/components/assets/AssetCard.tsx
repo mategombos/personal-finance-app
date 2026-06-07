@@ -27,12 +27,12 @@ export function AssetCard({ asset, onEdit, onDelete }: AssetCardProps) {
           {asset.description && (
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{asset.description}</p>
           )}
-          <p className="text-lg font-bold text-gray-900 dark:text-white mt-0.5">
+          <p className="text-base font-semibold text-gray-900 dark:text-white mt-0.5">
             {formatCurrency(asset.balance, asset.currency)}
           </p>
         </div>
       </div>
-      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2">
+      <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2">
         <Button variant="ghost" size="sm" onClick={() => onEdit(asset)} aria-label="Edit">
           <Pencil className="h-3.5 w-3.5" />
         </Button>

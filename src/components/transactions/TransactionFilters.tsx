@@ -1,6 +1,6 @@
 'use client';
 
-import { Category } from '@/types';
+import { Category, Asset } from '@/types';
 import { Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -10,6 +10,7 @@ import { useTranslations } from '@/hooks/useTranslations';
 export interface TransactionFiltersState {
   type: '' | 'income' | 'expense';
   categoryId: string;
+  assetId: string;
   dateFrom: string;
   dateTo: string;
 }
@@ -17,16 +18,17 @@ export interface TransactionFiltersState {
 interface TransactionFiltersProps {
   filters: TransactionFiltersState;
   categories: Category[];
+  assets: Asset[];
   onChange: (f: TransactionFiltersState) => void;
   onReset: () => void;
 }
 
-export function TransactionFilters({ filters, categories, onChange, onReset }: TransactionFiltersProps) {
+export function TransactionFilters({ filters, categories, assets, onChange, onReset }: TransactionFiltersProps) {
   const t = useTranslations();
   const set = (key: keyof TransactionFiltersState, value: string) =>
     onChange({ ...filters, [key]: value });
 
-  const hasActive = filters.type || filters.categoryId || filters.dateFrom || filters.dateTo;
+  const hasActive = filters.type || filters.categoryId || filters.assetId || filters.dateFrom || filters.dateTo;
 
   return (
     <div className="flex flex-wrap gap-3 items-end">
@@ -50,6 +52,18 @@ export function TransactionFilters({ filters, categories, onChange, onReset }: T
         <option value="">{t('transactions.filters.allCategories')}</option>
         {categories.map((c) => (
           <option key={c.id} value={c.id}>{c.name}</option>
+        ))}
+      </Select>
+
+      <Select
+        label="Account"
+        value={filters.assetId}
+        onChange={(e) => set('assetId', e.target.value)}
+        className="w-44"
+      >
+        <option value="">All Accounts</option>
+        {assets.filter((a) => !a.isArchived).map((a) => (
+          <option key={a.id} value={a.id}>{a.name}</option>
         ))}
       </Select>
 

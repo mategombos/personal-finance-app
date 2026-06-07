@@ -30,6 +30,7 @@ const en = {
     viewAll: 'View all',
     spendingByCategory: 'Spending by Category',
     noExpenseData: 'No expense data yet',
+    noMonthlyData: 'No monthly data yet',
     monthlyBreakdown: 'Monthly Breakdown (Last 6 Months)',
     netWorth: 'Net Worth',
     manage: 'Manage',

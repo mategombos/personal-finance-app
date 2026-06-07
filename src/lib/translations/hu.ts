@@ -34,6 +34,7 @@ const hu: MakeStrings<typeof en> = {
     viewAll: 'Összes',
     spendingByCategory: 'Kiadás kategóriánként',
     noExpenseData: 'Még nincs kiadási adat',
+    noMonthlyData: 'Még nincs havi adat',
     monthlyBreakdown: 'Havi összesítő (utolsó 6 hónap)',
     netWorth: 'Nettó vagyon',
     manage: 'Kezelés',

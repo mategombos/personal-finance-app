@@ -1,7 +1,7 @@
 import { AssetType } from '@/types';
 
 export const STORAGE_KEY = 'finance_app_v1';
-export const CURRENT_VERSION = 2;
+export const CURRENT_VERSION = 3;
 
 export const ASSET_TYPES: { value: AssetType; icon: string }[] = [
   { value: 'cash', icon: 'banknotes' },

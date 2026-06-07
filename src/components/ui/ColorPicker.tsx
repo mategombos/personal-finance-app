@@ -22,7 +22,7 @@ export function ColorPicker({ value, onChange, label }: ColorPickerProps) {
             onClick={() => onChange(color)}
             className={clsx(
               'h-8 w-8 rounded-full transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-              value === color && 'ring-2 ring-offset-2'
+              value === color && 'ring-2 ring-offset-2 ring-gray-900 dark:ring-gray-100'
             )}
             style={{ backgroundColor: color }}
             aria-label={`Select color ${color}`}

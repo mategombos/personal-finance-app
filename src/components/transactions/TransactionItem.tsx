@@ -1,8 +1,8 @@
 'use client';
 
-import { Transaction, Category } from '@/types';
+import { Transaction, Category, Asset } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { clsx } from 'clsx';
 import { useTranslations } from '@/hooks/useTranslations';
@@ -10,6 +10,7 @@ import { useTranslations } from '@/hooks/useTranslations';
 interface TransactionItemProps {
   transaction: Transaction;
   category?: Category;
+  asset?: Asset;
   currency: string;
   dateFormat: string;
   onEdit: (tx: Transaction) => void;
@@ -19,6 +20,7 @@ interface TransactionItemProps {
 export function TransactionItem({
   transaction: tx,
   category,
+  asset,
   currency,
   dateFormat,
   onEdit,
@@ -34,9 +36,17 @@ export function TransactionItem({
           style={{ backgroundColor: category?.color ?? '#6b7280' }}
         />
         <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{tx.description}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{tx.description}</p>
+            {tx.isRecurring && (
+              <span title="Recurring">
+                <RefreshCw className="h-3 w-3 text-blue-400 flex-shrink-0" />
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
             {category?.name ?? t('common.unknown')} · {formatDate(tx.date, dateFormat)}
+            {asset && <span className="ml-1 text-gray-400">· {asset.name}</span>}
           </p>
         </div>
       </div>
@@ -49,7 +59,7 @@ export function TransactionItem({
         >
           {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, currency)}
         </span>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           <Button variant="ghost" size="sm" onClick={() => onEdit(tx)} aria-label={t('common.edit')}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>

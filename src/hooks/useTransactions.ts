@@ -19,6 +19,18 @@ export function useTransactions() {
     return newTx;
   };
 
+  const addTransactions = (rows: TransactionFormData[]) => {
+    const now = new Date().toISOString();
+    const newTxs: Transaction[] = rows.map((data) => ({
+      ...data,
+      id: crypto.randomUUID(),
+      createdAt: now,
+      updatedAt: now,
+    }));
+    update((prev) => ({ ...prev, transactions: [...newTxs, ...prev.transactions] }));
+    return newTxs;
+  };
+
   const updateTransaction = (id: string, data: Partial<TransactionFormData>) => {
     update((prev) => ({
       ...prev,
@@ -38,6 +50,7 @@ export function useTransactions() {
   return {
     transactions: store.transactions,
     addTransaction,
+    addTransactions,
     updateTransaction,
     deleteTransaction,
   };

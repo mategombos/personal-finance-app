@@ -1,6 +1,6 @@
 'use client';
 
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { CategoryTotal } from '@/types';
 import { formatCurrency, formatPercent } from '@/lib/formatters';
 import { PieChart as PieIcon } from 'lucide-react';
@@ -46,9 +46,6 @@ export function SpendingByCategoryChart({ data, currency }: SpendingByCategoryCh
           </Pie>
           <Tooltip
             formatter={(value) => formatCurrency(Number(value), currency)}
-          />
-          <Legend
-            formatter={(value) => <span className="text-xs text-gray-700 dark:text-gray-300">{value}</span>}
           />
         </PieChart>
       </ResponsiveContainer>
