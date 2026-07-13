@@ -10,14 +10,28 @@ import { isFirebaseConfigured } from '@/lib/firebase';
 import { getCurrentFirebaseUser } from './useFirebaseSync';
 import { format } from 'date-fns';
 
-function takeNetWorthSnapshot(store: FinanceStore): FinanceStore {
+// Creates or updates the current month's net worth snapshot.
+// - No snapshot for this month yet   -> append one (month-rollover / first run).
+// - Existing auto snapshot           -> refresh its value to live net worth.
+// - Existing manual (pinned) snapshot -> leave untouched.
+// Returns the SAME store reference when nothing changed, so callers can skip writes.
+function syncCurrentMonthSnapshot(store: FinanceStore): FinanceStore {
   const currentMonth = format(new Date(), 'yyyy-MM');
-  const alreadyHas = store.netWorthHistory.some((s) => s.date === currentMonth);
-  if (alreadyHas) return store;
   const value = calculateNetWorth(store.assets);
+  const existing = store.netWorthHistory.find((s) => s.date === currentMonth);
+
+  if (!existing) {
+    return {
+      ...store,
+      netWorthHistory: [...store.netWorthHistory, { date: currentMonth, value, manual: false }],
+    };
+  }
+  if (existing.manual || existing.value === value) return store;
   return {
     ...store,
-    netWorthHistory: [...store.netWorthHistory, { date: currentMonth, value }],
+    netWorthHistory: store.netWorthHistory.map((s) =>
+      s.date === currentMonth ? { ...s, value } : s
+    ),
   };
 }
 
@@ -36,14 +50,33 @@ export function useFinanceStore(): [FinanceStore, (updater: (prev: FinanceStore)
     return readStore();
   });
 
-  // Take net worth snapshot once on mount
-  useEffect(() => {
+  const syncSnapshot = useCallback(() => {
     setStore((prev) => {
-      const next = takeNetWorthSnapshot(prev);
+      const next = syncCurrentMonthSnapshot(prev);
       if (next !== prev) writeStore(next);
       return next;
     });
   }, []);
+
+  // Trigger 1 (meaningful asset-state change) + Trigger 3 (mount backstop):
+  // keyed on the live net-worth NUMBER, so cosmetic asset edits that don't move
+  // the value are ignored, and no-op syncs return the same ref (no write/render).
+  const liveNetWorth = calculateNetWorth(store.assets);
+  useEffect(() => {
+    syncSnapshot();
+  }, [liveNetWorth, syncSnapshot]);
+
+  // Trigger 2 (month rollover): re-check when the tab regains focus/visibility,
+  // catching the app being left open across a month boundary with no asset change.
+  useEffect(() => {
+    const recheck = () => syncSnapshot();
+    window.addEventListener('focus', recheck);
+    document.addEventListener('visibilitychange', recheck);
+    return () => {
+      window.removeEventListener('focus', recheck);
+      document.removeEventListener('visibilitychange', recheck);
+    };
+  }, [syncSnapshot]);
 
   // Cross-tab sync
   useEffect(() => {

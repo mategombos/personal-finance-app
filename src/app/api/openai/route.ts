@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+// Rate limiting: max 20 requests per IP per 10 minutes
+const RATE_LIMIT_MAX = 20;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    rateLimitMap.set(ip, { count: 1, windowStart: now });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count += 1;
+  return true;
+}
+
 const parseStatementBodySchema = z.object({
   type: z.literal('parse-statement'),
   csv: z.string().max(500_000),
@@ -14,11 +31,13 @@ const scanReceiptBodySchema = z.object({
 
 const bodySchema = z.discriminatedUnion('type', [parseStatementBodySchema, scanReceiptBodySchema]);
 
+// Use coerce.number to handle amounts returned as strings by OpenAI.
+// Row-level validation: individual bad rows are filtered out, not the entire batch.
 const parsedRowSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  amount: z.number().positive().finite().max(1e12),
+  amount: z.coerce.number().positive().finite().max(1e12),
   type: z.enum(['income', 'expense']),
-  description: z.string().max(200),
+  description: z.string().max(200).default(''),
 });
 
 const scannedReceiptSchema = z.object({
@@ -61,6 +80,43 @@ function extractJson(text: string): unknown {
 }
 
 export async function POST(request: NextRequest) {
+  // Origin check: only allow requests from the same host to prevent cross-site key abuse.
+  // Use exact URL origin comparison — never prefix/substring matching, which allows bypasses
+  // like https://localhost:3000.evil.com passing a startsWith check.
+  const originHeader = request.headers.get('origin');
+  if (originHeader) {
+    const host = request.headers.get('host') ?? '';
+    const allowedOrigins = [
+      `https://${host}`,
+      'http://localhost:3000',
+      'http://localhost:3001',
+    ];
+    let allowed = false;
+    try {
+      const requestOrigin = new URL(originHeader).origin;
+      allowed = allowedOrigins.some((o) => {
+        try { return new URL(o).origin === requestOrigin; } catch { return false; }
+      });
+    } catch {
+      allowed = false;
+    }
+    if (!allowed) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+
+  // Rate limiting
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    request.headers.get('x-real-ip') ??
+    'unknown';
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429 }
+    );
+  }
+
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json({ error: 'AI features not configured' }, { status: 503 });
   }
@@ -105,8 +161,15 @@ ${sanitized}
         4096
       );
 
-      const rows = z.array(parsedRowSchema).safeParse(extractJson(text));
-      return NextResponse.json(rows.success ? rows.data : []);
+      // Validate each row individually so one bad row doesn't discard the whole batch
+      const rawRows = extractJson(text);
+      const rows = Array.isArray(rawRows)
+        ? rawRows
+            .map((r) => parsedRowSchema.safeParse(r))
+            .filter((r) => r.success)
+            .map((r) => r.data!)
+        : [];
+      return NextResponse.json(rows);
     }
 
     if (parsed.data.type === 'scan-receipt') {

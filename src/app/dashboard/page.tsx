@@ -10,7 +10,7 @@ import { SpendingByCategoryChart } from '@/components/dashboard/SpendingByCatego
 import { MonthlyBreakdownChart } from '@/components/dashboard/MonthlyBreakdownChart';
 import { RecentTransactionsList } from '@/components/dashboard/RecentTransactionsList';
 import { NetWorthCard } from '@/components/dashboard/NetWorthCard';
-import { NetWorthHistoryChart } from '@/components/dashboard/NetWorthHistoryChart';
+import { NetWorthHistoryManager } from '@/components/dashboard/NetWorthHistoryManager';
 import { UpcomingRecurringCard } from '@/components/dashboard/UpcomingRecurringCard';
 import { BudgetProgressCard } from '@/components/dashboard/BudgetProgressCard';
 import { SavingsRateCard } from '@/components/dashboard/SavingsRateCard';
@@ -34,7 +34,6 @@ export default function DashboardPage() {
     budgetUsage,
     savingsRate,
     prevMonthSavingsRate,
-    netWorthHistory,
   } = useDashboard(period);
 
   return (
@@ -70,7 +69,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Net worth history */}
-      <NetWorthHistoryChart data={netWorthHistory} currency={settings.currency} />
+      <NetWorthHistoryManager currency={settings.currency} />
 
       {/* Bottom row */}
       <div className="grid gap-6 lg:grid-cols-2">

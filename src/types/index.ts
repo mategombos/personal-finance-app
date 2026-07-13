@@ -54,6 +54,7 @@ export interface AppSettings {
 export interface NetWorthSnapshot {
   date: string; // "YYYY-MM"
   value: number;
+  manual?: boolean; // true = user-set, never auto-overwritten
 }
 
 export interface FinanceStore {

@@ -13,7 +13,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { writeStore } from '@/lib/storage';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { financeStoreImportSchema } from '@/lib/validators';
-import { FinanceStore } from '@/types';
+import { FinanceStore, AppSettings } from '@/types';
 
 const LANGUAGES = [
   { value: 'en', label: 'English' },
@@ -29,7 +29,16 @@ export default function SettingsPage() {
   const importRef = useRef<HTMLInputElement>(null);
   const t = useTranslations();
 
+  // Pending settings: user edits these; saved + reloaded only on Save
+  const [pending, setPending] = useState<AppSettings>(() => ({ ...settings }));
+  const isDirty = JSON.stringify(pending) !== JSON.stringify(settings);
+
   const activeAssets = assets.filter((a) => !a.isArchived);
+
+  const handleSave = () => {
+    updateSettings(pending);
+    window.location.reload();
+  };
 
   const handleExport = () => {
     const blob = new Blob([JSON.stringify(store, null, 2)], { type: 'application/json' });
@@ -79,8 +88,8 @@ export default function SettingsPage() {
         <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('settings.preferences')}</h2>
         <Select
           label={t('settings.defaultCurrency')}
-          value={settings.currency}
-          onChange={(e) => updateSettings({ currency: e.target.value })}
+          value={pending.currency}
+          onChange={(e) => setPending((p) => ({ ...p, currency: e.target.value }))}
         >
           {CURRENCIES.map((c) => (
             <option key={c.code} value={c.code}>{c.code} — {c.name} ({c.symbol})</option>
@@ -89,8 +98,8 @@ export default function SettingsPage() {
 
         <Select
           label={t('settings.dateFormat')}
-          value={settings.dateFormat}
-          onChange={(e) => updateSettings({ dateFormat: e.target.value })}
+          value={pending.dateFormat}
+          onChange={(e) => setPending((p) => ({ ...p, dateFormat: e.target.value }))}
         >
           {DATE_FORMATS.map((f) => (
             <option key={f.value} value={f.value}>{f.label}</option>
@@ -99,8 +108,8 @@ export default function SettingsPage() {
 
         <Select
           label={t('settings.language')}
-          value={settings.language ?? 'en'}
-          onChange={(e) => updateSettings({ language: e.target.value as 'en' | 'hu' })}
+          value={pending.language ?? 'en'}
+          onChange={(e) => setPending((p) => ({ ...p, language: e.target.value as 'en' | 'hu' }))}
         >
           {LANGUAGES.map((l) => (
             <option key={l.value} value={l.value}>{l.label}</option>
@@ -109,25 +118,31 @@ export default function SettingsPage() {
 
         {activeAssets.length > 0 && (
           <Select
-            label="Default Account"
-            value={settings.defaultAssetId ?? ''}
-            onChange={(e) => updateSettings({ defaultAssetId: e.target.value || undefined })}
+            label={t('settings.defaultAccount')}
+            value={pending.defaultAssetId ?? ''}
+            onChange={(e) => setPending((p) => ({ ...p, defaultAssetId: e.target.value || undefined }))}
           >
-            <option value="">No default</option>
+            <option value="">{t('settings.noDefaultAccount')}</option>
             {activeAssets.map((a) => (
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
           </Select>
         )}
+
+        <div className="pt-2">
+          <Button onClick={handleSave} disabled={!isDirty}>
+            {t('common.saveChanges')}
+          </Button>
+        </div>
       </section>
 
       {/* Cloud Sync */}
       {isFirebaseConfigured() && (
         <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-900 space-y-3">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Cloud Sync</h2>
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('settings.cloudSync')}</h2>
           <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-green-500 inline-block" />
-            Firebase connected — your data syncs automatically across devices.
+            {t('settings.cloudSyncDesc')}
           </p>
         </section>
       )}
@@ -145,6 +160,9 @@ export default function SettingsPage() {
           </Button>
           <input ref={importRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
         </div>
+        <p className="text-xs text-amber-600 dark:text-amber-400">
+          ⚠ {t('settings.exportWarning')}
+        </p>
         {importError && (
           <p className="text-sm text-red-600 dark:text-red-400">{importError}</p>
         )}

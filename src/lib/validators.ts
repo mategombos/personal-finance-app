@@ -49,6 +49,7 @@ export const financeStoreImportSchema = z.object({
   netWorthHistory: z.array(z.object({
     date: z.string().regex(/^\d{4}-\d{2}$/),
     value: z.number().finite().max(1e15),
+    manual: z.boolean().optional(),
   })).optional().default([]),
 });
 
@@ -102,6 +103,17 @@ export function makeAssetSchema(msgs: {
   });
 }
 
+export function makeNetWorthSnapshotSchema(msgs: {
+  monthInvalid: string;
+  valueRequired: string;
+}) {
+  return z.object({
+    date: z.string().regex(/^\d{4}-\d{2}$/, msgs.monthInvalid),
+    value: z.number().finite(msgs.valueRequired).max(1e15),
+  });
+}
+
 export type TransactionFormData = z.infer<ReturnType<typeof makeTransactionSchema>>;
 export type CategoryFormData = z.infer<ReturnType<typeof makeCategorySchema>>;
 export type AssetFormData = z.infer<ReturnType<typeof makeAssetSchema>>;
+export type NetWorthSnapshotFormData = z.infer<ReturnType<typeof makeNetWorthSnapshotSchema>>;

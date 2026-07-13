@@ -21,7 +21,7 @@ export function Sidebar() {
   const NAV_ITEMS = [
     { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { href: '/transactions', label: t('nav.transactions'), icon: ArrowLeftRight },
-    { href: '/import', label: 'Import', icon: Upload },
+    { href: '/import', label: t('nav.import'), icon: Upload },
     { href: '/categories', label: t('nav.categories'), icon: Tag },
     { href: '/assets', label: t('nav.assets'), icon: Wallet },
     { href: '/settings', label: t('nav.settings'), icon: Settings },

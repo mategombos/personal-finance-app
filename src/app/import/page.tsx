@@ -11,10 +11,12 @@ const MAX_CSV_SIZE = 5 * 1024 * 1024; // 5 MB
 import { TransactionFormData } from '@/lib/validators';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
-import { Upload, Loader2, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Upload, Loader2, CheckCircle, AlertCircle, ArrowLeft, ShieldAlert } from 'lucide-react';
 import { clsx } from 'clsx';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+
+const OPENAI_CONSENT_KEY = 'openai_consent_v1';
 
 interface ReviewRow extends ParsedRow {
   id: string;
@@ -40,6 +42,7 @@ export default function ImportPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState<ReviewRow[]>([]);
+  const [showConsent, setShowConsent] = useState(false);
 
   const activeAssets = assets.filter((a) => !a.isArchived);
   const defaultAssetId = settings.defaultAssetId ?? '';
@@ -76,14 +79,14 @@ export default function ImportPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleAnalyse = async () => {
+  const runAnalysis = async () => {
     if (!csvText) return;
     setLoading(true);
     setError(null);
     try {
       const parsed = await parseStatement(csvText);
       if (parsed.length === 0) {
-        setError('No transactions could be parsed. Try a different file or check the format.');
+        setError('No transactions could be parsed. Check that the file contains transaction data and try again.');
         setLoading(false);
         return;
       }
@@ -106,6 +109,23 @@ export default function ImportPage() {
     }
   };
 
+  const handleAnalyseClick = () => {
+    if (!csvText) return;
+    const alreadyConsented = typeof window !== 'undefined' &&
+      sessionStorage.getItem(OPENAI_CONSENT_KEY) === '1';
+    if (alreadyConsented) {
+      runAnalysis();
+    } else {
+      setShowConsent(true);
+    }
+  };
+
+  const handleConsentConfirm = () => {
+    sessionStorage.setItem(OPENAI_CONSENT_KEY, '1');
+    setShowConsent(false);
+    runAnalysis();
+  };
+
   const handleImport = () => {
     const selected = rows.filter((r) => r.selected && r.categoryId);
     const formData: TransactionFormData[] = selected.map((r) => ({
@@ -123,6 +143,8 @@ export default function ImportPage() {
   const updateRow = (id: string, patch: Partial<ReviewRow>) => {
     setRows((prev) => prev.map((r) => r.id === id ? { ...r, ...patch } : r));
   };
+
+  const importableCount = rows.filter((r) => r.selected && r.categoryId).length;
 
   if (step === 'done') {
     return (
@@ -144,6 +166,34 @@ export default function ImportPage() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Import Bank Statement</h1>
       </div>
 
+      {/* OpenAI consent modal */}
+      {showConsent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl bg-white dark:bg-gray-900 p-6 shadow-xl space-y-4">
+            <div className="flex items-start gap-3">
+              <ShieldAlert className="h-6 w-6 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
+                  Data Privacy Notice
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Your bank statement will be sent to <strong>OpenAI&apos;s API</strong> for parsing.
+                  OpenAI does not use API data for training. The data is used only for this single request
+                  and is not stored beyond it.
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  No data leaves this app other than this API call.
+                  This notice will only appear once per browser session.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setShowConsent(false)}>Cancel</Button>
+              <Button onClick={handleConsentConfirm}>I understand, proceed</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {step === 'upload' && (
         <div className="space-y-6">
@@ -170,17 +220,18 @@ export default function ImportPage() {
           )}
 
           {error && (
-            <p className="text-sm text-red-500 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" /> {error}
-            </p>
+            <div className="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 p-4 flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+            </div>
           )}
 
           <Button
-            onClick={handleAnalyse}
+            onClick={handleAnalyseClick}
             disabled={!csvText || loading}
             className="w-full justify-center"
           >
-            {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Analysing…</> : 'Analyse with AI'}
+            {loading ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Analysing…</> : 'Analyse with AI'}
           </Button>
         </div>
       )}
@@ -189,7 +240,7 @@ export default function ImportPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {rows.filter((r) => r.selected).length} of {rows.length} transactions selected
+              {importableCount} of {rows.length} transactions ready to import
             </p>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" onClick={() => setStep('upload')}>
@@ -198,9 +249,9 @@ export default function ImportPage() {
               <Button
                 size="sm"
                 onClick={handleImport}
-                disabled={rows.filter((r) => r.selected && r.categoryId).length === 0}
+                disabled={importableCount === 0}
               >
-                Import {rows.filter((r) => r.selected).length} transactions
+                Import {importableCount} transactions
               </Button>
             </div>
           </div>
